@@ -1,0 +1,93 @@
+---
+title: "SGPA Predict"
+output: html_notebook
+---
+
+In this R markdown, I predicted the sem4 result and find RMSE and R-Square on that 
+
+
+loaded packages which are required
+```{r}
+library(caret)
+library(mlr)
+library(tidyverse)
+library(ggplot2)
+```
+
+
+reading data from SGPA.csv file
+```{r}
+sgpa_data <- read.csv("sgpa.csv" ,header = T)
+head(sgpa_data)
+```
+
+```{r}
+dim(sgpa_data)
+```
+
+changing the name of first column "i..no" to "en_no"
+```{r}
+names(sgpa_data)[names(sgpa_data) == "ï..No"] <- "en_no"
+
+```
+
+partitioning the data
+```{r}
+inTrain <- createDataPartition(y=sgpa_data$en_no , p=0.7, list = FALSE)
+testing <- sgpa_data[-inTrain,]
+training <-  sgpa_data[inTrain,]
+```
+```{r}
+dim(testing)
+
+```
+
+```{r}
+dim(training)
+```
+
+
+```{r}
+lm1 <- lm(sgpa_data$sem4 ~ sgpa_data$sem1 + sgpa_data$sem2 + sgpa_data$sem3)
+p1 <- predict(lm1, newdata = testing)
+```
+
+predicted values
+```{r}
+p1
+```
+
+
+summay of model 'lm1'
+```{r}
+summary(lm1)
+```
+
+adding column of predicted values in SGPA.csv file
+```{r}
+sgpa_data["prediction"] <-  p1
+```
+
+```{r}
+write.csv(sgpa_data, file="sgpa_with_predicted_values.csv", append=T, row.names=F, col.names=F,  sep="," )
+
+```
+
+Root Mean Square Error
+```{r}
+RMSE(p1, sgpa_data$sem4)
+```
+
+R-Squared 
+```{r}
+R2(p1, sgpa_data$sem4)
+```
+
+plot a graph (prediction VS sem4)
+```{r}
+ggplot(sgpa_data, aes(y = sem4, x = prediction)) +
+  geom_point() +
+  stat_smooth()
+```
+
+
